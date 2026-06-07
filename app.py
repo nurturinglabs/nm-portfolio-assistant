@@ -5,18 +5,26 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from nm_theme import (
+    NM_NAVY,
+    NM_YELLOW,
+    NM_BLUE_MID,
+    NM_BG_CARD,
+    NM_TEXT_MAIN,
+    NM_TEXT_MUTED,
+    NM_BORDER,
+    nm_header,
+    nm_inject_css,
+)
 from snowflake_client import get_latest_quarter_berkshire, get_latest_quarter_nm
 from text_to_sql import ask_portfolio_assistant
 
-# -------------------- Brand constants --------------------
-NM_NAVY = "#003366"
-NM_YELLOW = "#FFB500"
-NM_BLUE = "#1A5C99"
-BG_PAGE = "#F5F7FA"
-BG_CARD = "#FFFFFF"
-TEXT_MAIN = "#0F1929"
-TEXT_MUTED = "#6B7280"
-BORDER = "#E0E8F4"
+# -------------------- Brand constants (from nm_theme design system) --------------------
+NM_BLUE = NM_BLUE_MID
+BG_CARD = NM_BG_CARD
+TEXT_MAIN = NM_TEXT_MAIN
+TEXT_MUTED = NM_TEXT_MUTED
+BORDER = NM_BORDER
 
 SUGGESTED_QUESTIONS_NM = [
     "What are the top 5 holdings in Index 500 Stock Portfolio?",
@@ -49,36 +57,17 @@ st.set_page_config(
 
 
 def inject_css() -> None:
+    """App-specific chat styling layered on top of the nm_theme design system.
+
+    Brand colors, fonts, page background, full-width container, and the
+    Streamlit chrome (header/footer/menu) are all handled by nm_inject_css().
+    Only the chat-specific components live here.
+    """
     st.markdown(
         f"""
         <style>
-          .stApp {{ background: {BG_PAGE}; }}
-          .block-container {{ padding-top: 0.5rem; padding-bottom: 5rem; max-width: 1100px; }}
-          header[data-testid="stHeader"] {{ display: none; }}
-          footer {{ visibility: hidden; }}
-
-          /* -------- Header bar -------- */
-          .nm-header {{
-            background: {NM_NAVY};
-            padding: 14px 22px;
-            border-radius: 10px;
-            margin-bottom: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #fff;
-          }}
-          .nm-header-left {{ display: flex; align-items: baseline; gap: 8px; }}
-          .nm-brand {{ color: {NM_YELLOW}; font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }}
-          .nm-sub {{ color: #B8D4F0; font-size: 13px; }}
-          .nm-badges {{ display: flex; gap: 8px; flex-wrap: wrap; }}
-          .nm-badge {{
-            font-size: 11px; padding: 4px 10px; border-radius: 999px;
-            font-weight: 600; letter-spacing: 0.3px;
-          }}
-          .badge-live {{ background: {NM_YELLOW}; color: {NM_NAVY}; }}
-          .badge-data {{ background: {NM_BLUE}; color: #fff; }}
-          .badge-quarter {{ background: #1f2a44; color: #B8D4F0; }}
+          /* keep room for the input row at the bottom */
+          .block-container {{ padding-bottom: 5rem !important; }}
 
           /* -------- Chat bubbles -------- */
           .chat-row {{ display: flex; gap: 10px; margin: 14px 0; align-items: flex-start; }}
@@ -335,21 +324,10 @@ def render_header() -> None:
     except Exception:
         quarter_label = "Live"
 
-    st.markdown(
-        f"""
-        <div class="nm-header">
-          <div class="nm-header-left">
-            <span class="nm-brand">Northwestern Mutual</span>
-            <span class="nm-sub">· Portfolio Assistant</span>
-          </div>
-          <div class="nm-badges">
-            <span class="nm-badge badge-live">● Live data</span>
-            <span class="nm-badge badge-data">Snowflake</span>
-            <span class="nm-badge badge-quarter">{quarter_label}</span>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    nm_header(
+        app_title="Portfolio Assistant",
+        subtitle=f"{quarter_label} · Snowflake · Claude text-to-SQL",
+        badges=[("● Live data", "green"), ("Snowflake", "blue")],
     )
 
 
@@ -402,6 +380,7 @@ def render_footer() -> None:
 
 # -------------------- Main --------------------
 def main() -> None:
+    nm_inject_css()
     inject_css()
     init_state()
     render_header()
